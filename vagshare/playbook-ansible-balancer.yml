@@ -1,0 +1,31 @@
+---
+- hosts: all
+  become: yes
+  become_method: sudo
+  
+  tasks:
+  
+  - name: Install nginx
+    apt: 
+      name: 
+        - nginx
+      state: present
+    become: yes
+  
+  - name: updating /etc/hosts
+    shell: echo "192.168.15.2 BX1.agima.rus BX1" >> /etc/hosts
+    
+  - name: updating /etc/hosts
+    shell: echo "192.168.15.3 BX2.agima.rus BX2" >> /etc/hosts
+    
+  - name: Set nginx config
+    synchronize:
+      mode: pull
+      src: /home/vagrant/provision/files/webservers.conf
+      dest: /etc/nginx/sites-available/webservers.conf
+      
+  - name: Activate Balancer
+    command:  ln -s /etc/nginx/sites-available/webservers.conf /etc/nginx/sites-enabled/webservers.conf
+    
+  - name: Restarting NGINX..
+    command: systemctl restart nginx
