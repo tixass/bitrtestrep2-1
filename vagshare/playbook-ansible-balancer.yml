@@ -28,8 +28,5 @@
     command:  ln -s /etc/nginx/sites-available/webservers.conf /etc/nginx/sites-enabled/webservers.conf
     
   - name: Restarting NGINX..
-    notify: restart nginx
-    
-  handlers:
-  - name: restart nginx
-    service: name=nginx state=restarted
+    command: systemctl restart nginx
+
