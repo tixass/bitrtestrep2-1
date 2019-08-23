@@ -4,19 +4,24 @@
   become_method: sudo
   
   tasks:
-  
   - name: Install progs wget nano
     yum: 
       name: 
         - wget
         - nano
       state: present
-    become: yes
-
-  - name: Shutdown SElinux
-    command: sed -i 's/enforcing/disabled/g' /etc/selinux/config /etc/selinux/config
-    become: yes
-    
+  
   - name: Make script bitrix-env.sh executable  
     command: chmod +x /home/vagrant/provision/files/bitrix-env.sh
-    become: yes
+  
+  - name: Install Bitrix Env. Wait please...
+    command: /home/vagrant/provision/files/bitrix-env.sh -s -p -H bitrix -M 'mysql'
+	
+  - name: Switch on phar-files
+    shell: cp /etc/php.d/20-phar.ini.disabled /etc/php.d/20-phar.ini
+    
+  - name: Install composer...  
+    shell: curl -sS https://getcomposer.org/installer | php
+    
+  - name: ...and Install composer
+    command: mv composer.phar /usr/sbin/composer
