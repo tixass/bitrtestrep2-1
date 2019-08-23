@@ -7,7 +7,7 @@ BRIDGE_NET="192.168.1."
 INTERNAL_NET="192.168.15."
 
 DOMAIN="agima.rus"
-# Массив настроек для каждой их 3х виртуальных машин
+# Массив настроек для битриксовых машин
 serversbx=[
   {
     :hostname => "BX1." + DOMAIN,
@@ -23,7 +23,7 @@ serversbx=[
 	:frwd_host => 8080
   }
 ]
-
+# Массив настроек для балансировщиков
 serversbl=[
   {
     :hostname => "BCR1." + DOMAIN,
@@ -47,12 +47,12 @@ unless Vagrant.has_plugin?("vagrant-disksize")
 end
 
 Vagrant.configure(2) do |config|
-    config.vm.box_check_update = false
-	#config.disksize.size = '5GB'
+    	#config.disksize.size = '5GB'
 	
     serversbx.each do |machine|
         # Применяем конфигурации для каждой машины. Имя машины в переменной "machine[:hostname]"
-        config.vm.define machine[:hostname] do |node|
+        config.vm.box_check_update = false
+		config.vm.define machine[:hostname] do |node|
 			node.vm.box = "centos/7"
             node.vm.hostname = machine[:hostname]
 			#node.vm.network "public_network", type: "dhcp"
@@ -68,21 +68,22 @@ Vagrant.configure(2) do |config|
 				vb.cpus = 1
                 vb.name = machine[:hostname]
             end
-			node.vm.provision "ansible_local" do |ansible|
-				ansible.provisioning_path = "/home/vagrant/provision/"
-				ansible.playbook = "playbook-ansible-bitrix.yml"
-			end
 			
+			node.vm.provision "shell", inline: <<-'END'
+			
+			sudo sed -i 's/enforcing/disabled/g' /etc/selinux/config
+			
+			END
+
 			node.vm.provision :reload
-	
+			
 			node.vm.provision "ansible_local" do |ansible|
 				ansible.provisioning_path = "/home/vagrant/provision/"
-				ansible.playbook = "playbook-ansible-bitrix2.yml"
+				ansible.playbook = "playbook-ansible-bitrix.yml"				
 			end
-
+						
         end
 	end
-	
 	
 	serversbl.each do |machine|	
 		config.vm.define machine[:hostname] do |node|
@@ -105,5 +106,6 @@ Vagrant.configure(2) do |config|
 				ansible.playbook = "playbook-ansible-balancer.yml"
 			end
 	    end
-	end	
+	end
+	
 end
